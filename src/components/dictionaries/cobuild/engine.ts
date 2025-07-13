@@ -13,10 +13,23 @@ import {
 } from '../helpers'
 import { getStaticSpeaker } from '@/components/Speaker'
 
+// German character normalization function
+function normalizeGermanText(text: string): string {
+  return text
+    .replace(/ü/g, 'u')
+    .replace(/ß/g, 'ss')
+    .replace(/ä/g, 'a')
+    .replace(/ö/g, 'o')
+    .replace(/Ü/g, 'U')
+    .replace(/Ä/g, 'A')
+    .replace(/Ö/g, 'O')
+}
+
 export const getSrcPage: GetSrcPageFunction = text => {
+  const normalizedText = normalizeGermanText(text)
   return (
-    `https://www.collinsdictionary.com/dictionary/english/` +
-    encodeURIComponent(text.replace(/\s+/g, '-'))
+    `https://www.collinsdictionary.com/dictionary/german-english/` +
+    encodeURIComponent(normalizedText.replace(/\s+/g, '-'))
   )
 }
 
@@ -52,11 +65,12 @@ export const search: SearchFunction<COBUILDResult> = async (
   profile,
   payload
 ) => {
-  text = encodeURIComponent(text.replace(/\s+/g, '-'))
+  const normalizedText = normalizeGermanText(text)
+  const encodedText = encodeURIComponent(normalizedText.replace(/\s+/g, '-'))
   const { options } = profile.dicts.all.cobuild
   const sources: string[] = [
-    'https://www.collinsdictionary.com/dictionary/english/',
-    'https://www.collinsdictionary.com/zh/dictionary/english/'
+    'https://www.collinsdictionary.com/dictionary/german-english/',
+    'https://www.collinsdictionary.com/zh/dictionary/german-english/'
   ]
 
   if (options.cibaFirst) {
@@ -64,11 +78,11 @@ export const search: SearchFunction<COBUILDResult> = async (
   }
 
   try {
-    return handleDOM(await fetchDirtyDOM(sources[0] + text), config)
+    return handleDOM(await fetchDirtyDOM(sources[0] + encodedText), config)
   } catch (e) {
     let doc: Document
     try {
-      doc = await fetchDirtyDOM(sources[1] + text)
+      doc = await fetchDirtyDOM(sources[1] + encodedText)
     } catch (e) {
       return handleNetWorkError()
     }
